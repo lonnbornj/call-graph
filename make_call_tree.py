@@ -11,31 +11,23 @@ DATA_DIR = os.path.join("real_example", "function_tree_data")
 fn = "save_object_data3"
 
 
-def get_all_ancestors(child, processed=[]):
+def add_all_ancestors(G, child, processed=[]):
+    G = add_parents_to_graph(G, child)
     processed.append(child)
-    ancestors = get_parents(child)
-    for node in ancestors:
+    cur_nodes = copy.deepcopy(G.nodes)
+    for node in cur_nodes:
         if node not in processed:
-            ancestors += get_all_ancestors(node, processed)
-    return set(ancestors)
+            G = add_all_ancestors(G, node, processed)
+    return G
 
 
-def get_parents(child):
-    with open(os.path.join(DATA_DIR, child + ".txt")) as f:
-        parents = [
-            os.path.basename(fname).strip()[:-2]
-            for fname in f.readlines()
-            if fname != child
-        ]
-    return parents
-
-
-def add_parent_nodes_to_graph(G, child):
+def add_parents_to_graph(G, child):
     parents = get_parents(child)
     for node in parents:
         G.add_node(node)
         G.add_edges_from([(node, child)])
     G.remove_edges_from(nx.selfloop_edges(G))
+    return G
 
 
 def calc_graph_layers(H, layers={}):
@@ -80,7 +72,7 @@ def calc_node_positions(G):
 def plot(G, pos=None):
     if pos is None:
         pos = nx.spring_layout(G)
-    plt.figure(figsize=(30, 15))
+    plt.figure(figsize=(30, 15))  # todo make figsize a function of graph size
     nx.draw_networkx_nodes(G, pos, node_size=200)
     nx.draw_networkx_edges(G, pos, connectionstyle="arc3,rad=0.2")
     labels = {}
@@ -109,16 +101,11 @@ def plot(G, pos=None):
     plt.savefig("test.png")
 
 
-def main(function):
+def main(leaf_node):
 
     G = nx.DiGraph()
-    G.add_node(function)
-    nodes = [function]
-    nodes.extend(get_all_ancestors(function))
-    for a in nodes:
-        # todo: this results in a second (unecessary) call to get_parents
-        # for every node. Might as well construct the graph as we get the ancestors
-        add_parent_nodes_to_graph(G, a)
+    G.add_node(leaf_node)
+    G = add_all_ancestors(G, leaf_node)
     print("calculating layers")
     pos = calc_node_positions(G)
     print("plotting")
