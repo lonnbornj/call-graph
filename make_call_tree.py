@@ -30,14 +30,24 @@ def add_parents_to_graph(G, child):
     return G
 
 
-def calc_graph_layers(H, layers={}):
+def get_parents(child):
+    with open(os.path.join(DATA_DIR, child + ".txt")) as f:
+        parents = [
+            os.path.basename(fname).strip()[:-2]
+            for fname in f.readlines()
+            if fname != child
+        ]
+    return parents
+
+
+def calc_graph_hierarchy(H, layers={}):
     cur_layer = max([l + 1 for l in layers.values()] if layers else [0])
     root_nodes = find_root_nodes(H)
     for node in root_nodes:
         layers[node] = cur_layer
     H = remove_from_graph(H, root_nodes)
     if H.nodes:
-        calc_graph_layers(H, layers)
+        calc_graph_hierarchy(H, layers)
     return layers
 
 
@@ -58,7 +68,7 @@ def remove_from_graph(H, nodes):
 
 
 def calc_node_positions(G):
-    layers = calc_graph_layers(copy.deepcopy(G))
+    layers = calc_graph_hierarchy(copy.deepcopy(G))
     num_layers = max([l for l in layers.values()])
     cur_counts = defaultdict(lambda: 0)
     pos = nx.spring_layout(G)
@@ -75,9 +85,17 @@ def plot(G, pos=None):
     plt.figure(figsize=(30, 15))  # todo make figsize a function of graph size
     nx.draw_networkx_nodes(G, pos, node_size=200)
     nx.draw_networkx_edges(G, pos, connectionstyle="arc3,rad=0.2")
+    labels, label_pos = get_figure_label_positions(G, pos)
+    nx.draw_networkx_labels(
+        G, label_pos, labels, font_color="r", font_weight="bold", font_size=10
+    )
+    plt.draw()
+    plt.ylim([-1, plt.ylim()[1]])
+    plt.show()
+
+
+def get_figure_label_positions(G, pos, max_label_length=50):
     labels = {}
-    max_label_length = 50
-    # todo refactor into: get_figure_label_positions(G)
     for node in G.nodes():
         label = (
             node if len(node) < max_label_length else node[0:max_label_length] + "..."
@@ -92,13 +110,7 @@ def plot(G, pos=None):
             if y == num_layers
             else (x, y - 0.5 * x / size_layer_0)
         )
-
-    nx.draw_networkx_labels(
-        G, label_pos, labels, font_color="r", font_weight="bold", font_size=10
-    )
-    plt.draw()
-    plt.ylim([-1, plt.ylim()[1]])
-    plt.savefig("test.png")
+    return labels, label_pos
 
 
 def main(leaf_node):
@@ -106,9 +118,7 @@ def main(leaf_node):
     G = nx.DiGraph()
     G.add_node(leaf_node)
     G = add_all_ancestors(G, leaf_node)
-    print("calculating layers")
     pos = calc_node_positions(G)
-    print("plotting")
     plot(G, pos)
 
 
