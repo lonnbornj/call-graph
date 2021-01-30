@@ -1,13 +1,11 @@
-import os
+import networkx as nx
 import copy
 from collections import defaultdict
-import networkx as nx
 
 import get_edges
 import plotting
 
-DATA_DIR = os.path.join("example", "data")
-CODE_DIR = os.path.join("example", "code")
+root_dir = "example"
 fn = "a"
 
 
@@ -17,13 +15,12 @@ def add_all_ancestors(G, child, processed=[]):
     cur_nodes = copy.deepcopy(G.nodes)
     for node in cur_nodes:
         if node not in processed:
-            print(node)
             G = add_all_ancestors(G, node, processed)
     return G
 
 
 def add_parents_to_graph(G, child):
-    parents = get_edges.read_edges_file(DATA_DIR, child)
+    parents = get_edges.read_edges_file(root_dir, child)
     for node in parents:
         G.add_node(node)
         G.add_edges_from([(node, child)])
@@ -72,7 +69,7 @@ def remove_from_graph(H, nodes):
 
 def main(leaf_node):
 
-    get_edges.process_dir(CODE_DIR, force=True)
+    get_edges.process_dir(root_dir, force=True)
     G = nx.DiGraph()
     G.add_node(leaf_node)
     G = add_all_ancestors(G, leaf_node)
