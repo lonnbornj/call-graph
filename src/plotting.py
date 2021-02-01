@@ -2,20 +2,20 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-def plot(G, pos=None):
+def plot(G, title, pos=None):
     if pos is None:
         pos = nx.spring_layout(G)
-    labels, label_pos, graph_size = _get_figure_label_positions(G, pos)
-    # plt.figure(figsize=(10*graph_size[0], 5*graph_size[1]))
     plt.figure(figsize=(12, 8))
     nx.draw_networkx_nodes(G, pos, node_size=200)
     nx.draw_networkx_edges(G, pos, connectionstyle="arc3,rad=0.2")
 
+    labels, label_pos, graph_size = _get_figure_label_positions(G, pos)
     nx.draw_networkx_labels(
         G, label_pos, labels, font_color="r", font_weight="bold", font_size=10
     )
     plt.draw()
     plt.ylim([-1, plt.ylim()[1]])
+    plt.title(title)
     plt.show()
 
 
@@ -36,6 +36,7 @@ def _get_figure_label_positions(G, pos, max_label_length=50):
         label_pos[k] = (
             (x, y + 0.5 / size_layer_0)
             if y == ymax
+            # offset labels in bottom row if they are numerous
             else (x, y - 0.5 * offset_fac / size_layer_0)
         )
     return labels, label_pos, (xmax, ymax)
