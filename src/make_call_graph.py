@@ -2,6 +2,7 @@ import networkx as nx
 import copy
 from collections import defaultdict
 import sys
+import argparse
 
 import get_edges
 import plotting
@@ -84,18 +85,22 @@ def enforce_max_depth(G, node, graph_type, max_depth):
 
 
 def main():
-    root_dir, node, graph_type, max_depth = (
-        sys.argv[1],
-        sys.argv[2],
-        sys.argv[3],
-        int(sys.argv[4]),
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--dir', nargs=1, type=str, help="root directory, containing the functions in a subdirectory called `code`")
+    parser.add_argument('-n', '--node', nargs=1, type=str, help="the leaf or root princpal node")
+    parser.add_argument('-t', '--type', nargs=1, type=str, help="relationship of the node to the graph: `leaf` or `root`")
+    parser.add_argument('-m', '--max_depth', nargs='?', default=-1, type=int, help="maximum number of edges between the principal node and other nodes")
+    args = parser.parse_args()  
+    root_dir, node, graph_type, max_depth = args.dir[0], args.node[0], args.type[0], args.max_depth
+    depth_string = {True: "maximum graph depth", False: "depth {}".format(max_depth)}
+    print("Creating graph of function `{}` as {}, to {}".format(node, graph_type, depth_string[max_depth==-1]))
+
     get_edges.process_dir(root_dir, force=False)
     G = nx.DiGraph()
     G = add_all_nodes(G, node, graph_type, root_dir)
 
     if max_depth > -1:
-        G = enforce_max_depth(G, node, graph_type, max_depth)
+        G = enforce_max_depth(G, node, graph_type, args.max_depth)
     # graph only has a well-defined heirarchy if root (leaf) is in fact a root (leaf)
     if graph_type == "root":
         G.remove_edges_from([(c, node) for c in G.nodes])
