@@ -10,17 +10,10 @@ def process_dir(root_dir, force=False):
     out_dir = _out_dir(root_dir)
     if not os.path.isdir(out_dir):
         os.mkdir(out_dir)
+    if force:
+        _reset_output_files(out_dir)
     for node in fn_names:
         _write_edges_data(node, (src_files, fn_names), force, out_dir)
-
-
-def read_edges_file(root_dir, node, graph_type):
-    fname_suffix = "_in" if graph_type == "leaf" else "_out"
-    with open(os.path.join(_out_dir(root_dir), node + fname_suffix + ".txt")) as f:
-        edge_fns = f.readlines()
-        edge_fns = [fn.strip() for fn in edge_fns if fn != node]
-    print(node, edge_fns)
-    return edge_fns
 
 
 def _write_edges_data(child, fns, force, out_dir):
@@ -28,8 +21,9 @@ def _write_edges_data(child, fns, force, out_dir):
     edges_out_outfile = os.path.join(out_dir, child + "_out.txt")
     if not force and os.path.isfile(edges_in_outfile):
         return
-    # create empty edges-out file in case child is a leaf:
-    Path(edges_out_outfile).touch(exist_ok=True)
+    Path(edges_out_outfile).touch(
+        exist_ok=True
+    )  # create empty edges-out file in case child is a leaf
     print("Finding edges into node {}".format(child))
     node_edges_in = _find_edges_in(child, fns)
     with open(edges_in_outfile, "w") as f:
@@ -57,5 +51,19 @@ def _file_mentions_child(filen, child):
     return False
 
 
+def read_edges_file(root_dir, node, graph_type):
+    fname_suffix = "_in" if graph_type == "leaf" else "_out"
+    with open(os.path.join(_out_dir(root_dir), node + fname_suffix + ".txt")) as f:
+        edge_fns = f.readlines()
+        edge_fns = [fn.strip() for fn in edge_fns if fn != node]
+    return edge_fns
+
+
 def _out_dir(root_dir):
     return os.path.join(root_dir, "data")
+
+
+def _reset_output_files(directory):
+    for f in glob.glob(directory + "*.txt"):
+        if os.path.isfile(f):
+            os.remove(f)
