@@ -5,7 +5,7 @@ import glob
 
 
 def process_dir(root_dir, force=False):
-    """Process a directory (`root_dir`/code) of .m functions, saving data about their relationships"""
+    """Process a directory (`root_dir`/code) of .m functions, saving data about their relationships for post-processing"""
     src_files = glob.glob(os.path.join(root_dir, "code", "*.m"))
     fn_names = [os.path.basename(f).split(".")[0] for f in src_files]
     out_dir = _out_dir(root_dir)

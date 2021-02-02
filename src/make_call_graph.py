@@ -9,7 +9,7 @@ import plotting
 
 
 def add_all_nodes(G, cur_node, graph_type, root_dir, processed=[]):
-    """Populate the graph, by recursively find nodes connected by directed path"""
+    """Populate the graph, by recursively finding nodes connected by a directed path the the current node"""
     G = add_relatives_to_graph(G, cur_node, graph_type, root_dir)
     processed.append(cur_node)
     cur_nodes = copy.deepcopy(G.nodes)
@@ -47,11 +47,13 @@ def calc_node_positions(G, graph_type, max_depth):
 def calc_graph_hierarchy(H, graph_type, layers={}):
     """Assign nodes a y-coordinate, according to their distance to the principal"""
     if graph_type == "root":
+        # build the hierarchy from the shortest path to the root
         root_node_paths = [
             x for x in nx.all_pairs_shortest_path(H) if not H.in_edges(x[0])
         ]
         layers = {k: len(root_node_paths[0][1][k]) - 1 for k in H.nodes}
     elif graph_type == "leaf":
+        # build the hierarchy by recursively removing layers of root nodes until we get to the leaf
         cur_layer = max([l + 1 for l in layers.values()] if layers else [0])
         root_nodes = find_terminating_nodes(H, graph_type)
         for node in root_nodes:
@@ -132,7 +134,9 @@ def main():
         )
     )
 
+    # process data about the functional relationships
     get_edges.process_dir(root_dir, force=False)
+    # construct the graph
     G = nx.DiGraph()
     G = add_all_nodes(G, node, graph_type, root_dir)
 
@@ -143,7 +147,7 @@ def main():
         G.remove_edges_from([(c, node) for c in G.nodes])
     else:
         G.remove_edges_from([(node, c) for c in G.nodes])
-
+    # calculate the hierarchy of nodes, and their locations for plotting
     pos = calc_node_positions(G, graph_type, max_depth)
     plotting.plot(G, node, pos)
 
