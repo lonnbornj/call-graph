@@ -73,7 +73,9 @@ def write_output(graph_sizes_sorted, max_calls, max_func_name_chars, scale_facto
     with open(output_filename, "w") as f:
         f.write("`Size root graph`: size of the graph where `function` is the root\n")
         f.write("`Size leaf graph`: size of the graph where `function` is the leaf\n\n")
-        f.write(f"Scale factor: {scale_factor} (each dot represents {scale_factor} calls)\n")
+        f.write(
+            f"Scale factor: {scale_factor} (each dot represents {scale_factor} calls)\n"
+        )
         f.write(f"Sorted by size of the {order_by} graph\n\n")
         labels = ["SIZE ROOT GRAPH", "FUNCTION", "SIZE TREE GRAPH"]
         n_spaces1 = max_calls - len(labels[0])
@@ -96,6 +98,7 @@ def write_output(graph_sizes_sorted, max_calls, max_func_name_chars, scale_facto
                 + "\n"
             )
             f.write(calls_string)
+
 
 root_dir, order_by = sys.argv[1], sys.argv[2]
 output_filename = "output_" + order_by + ".txt"
