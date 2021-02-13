@@ -48,9 +48,16 @@ def _find_edges_in(child, fns):
 
 def _file_mentions_child(filen, child):
     """Returns True if a .m function mentions (calls) a specified child function, else returns False"""
+    child_rexp = child + "( |\t)*(\\(|;|$)"
+    child_anon_call = "@( |\t)*" + child + "( |\t)*," # anonymous function calls or form: @<fn>,
+    if os.stat(filen).st_size == 0:
+        return False
     with open(filen, "r") as f:
+        next(f)  # skip the first line, containing the function call signature
         for line in f:
-            if re.search(child, line):
+            if line.lstrip()[0] == '%':
+                continue
+            if re.search(child_rexp, line) or re.search(child_anon_call, line):
                 return True
     return False
 
